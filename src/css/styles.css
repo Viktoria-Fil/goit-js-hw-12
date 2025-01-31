@@ -1,7 +1,6 @@
 /* Common styles */
 @import url('./reset.css');
 @import url('./container.css');
-@import url('./animations.css');
 
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
