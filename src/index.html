@@ -12,17 +12,17 @@
 <body>
   <div class="container">
     <form class="form">
-      <input class="search-input" type="text" name="query" placeholder="Search for images..." />
-      <button class="search-btn" type="submit">Search
-
-      </button>
+      <input class="search-input" type="text" name="query" placeholder="Search for images..." required />
+      <button class="search-btn" type="submit">Search</button>
     </form>
-    <span class="loader hidden"></span>
-    <ul class="gallery">
-    </ul>
+    <span class="loader hidden">Loading images, please wait...</span>
+    <ul class="gallery"></ul>
+
+    <button class="search-btn load-more-btn hidden" type="button">Load more</button>
 
   </div>
 
+  <button class="scroll-to-top hidden">go up</button>
   <script type="module" src="./main.js"></script>
 </body>
 

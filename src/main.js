@@ -1,105 +1,118 @@
-
-// Описаний у документації
 import iziToast from 'izitoast';
-// Додатковий імпорт стилів
 import 'izitoast/dist/css/iziToast.min.css';
-// Описаний у документації
-import SimpleLightbox from 'simplelightbox';
-// Додатковий імпорт стилів
-import'simplelightbox/dist/simple-lightbox.min.css';
 
-import  getPictures from './js/pixabay-api';
-import createMurkup from './js/render-functions';
+import SimpleLightbox from "simplelightbox";
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-
-const lightbox = new SimpleLightbox('.gallery a', {
-    captions: true,
-    captionSelector: 'img',
-    captionType: 'attr',
-    captionsData: 'alt',
-    captionPosition: 'bottom',
-    animation: 250,
-    widthRatio: 0.8,
-    scaleImageToRatio: true,
-  });
+import getPictures from './js/pixabay-api';
+import {createMurkup, clearMurkup} from './js/render-functions';
 
 const form = document.querySelector('.form');
-const gallery = document.querySelector('.gallery');
+const input = document.querySelector('.search-input');
 const loader = document.querySelector('.loader');
+const loadMore = document.querySelector('.load-more-btn');
+const scrollBtn = document.querySelector('.scroll-to-top');
 
-form.addEventListener('submit', (e) => {
+let pageC = 1;
+let queryC = "";
+
+form.addEventListener('submit', submitBtn);
+loadMore.addEventListener('click', handleLoadMore);
+scrollBtn.addEventListener('click', scrollToTop);
+
+async function submitBtn(e) {
     e.preventDefault();
+    clearMurkup();
+    loader.classList.remove('hidden');
 
-    showLoader();
+    queryC = input.value.trim();
+    pageC = 1;
+     
+    await fetchImg();
 
-    const query = e.target.elements.query.value.trim();
-    if (!query) {
-        showLoader();
-        hideLoader();
-        iziToast.warning({
-            title: "Caution",
-            message: "Please add request",
-            messageSize: '16px',
-            position: 'center',
-            color: 'black'
-        });
-        return
-    }
+    form.reset();
+    
+}
 
+async function handleLoadMore() {
+    pageC += 1;
+    await fetchImg();
+}
 
-
-
-getPictures(query)
-    .then(data => {
-        showLoader();
-        hideLoader();
-        if (!data.hits.length) {
+async function fetchImg() {
+    
+    try {
+        const data = await getPictures(queryC, pageC);
+        loader.classList.add('hidden');
+        if (data.total === 0 || queryC === "") {
+            loadMore.classList.add('hidden');
+            scrollBtn.classList.add('hidden');
             iziToast.info({
                 title: '!',
                 message: "Sorry, there are no images matching your search query. Please try again!",
                 messageSize: '16px',
                 position: 'center',
-                backgroundColor: 'red'
+                backgroundColor: 'orange'
             });
-            hideLoader();
+            return;
         }
-        else {
-            gallery.innerHTML = '';
-            render(data.hits);
-           
-            
+        createMurkup(data);
+
+        if (data.hits.length === 0 || pageC * 15 >= data.totalHits) {
+            loadMore.classList.add('hidden');
+            iziToast.info({
+                title: '!',
+                message: "We're sorry, but you've reached the end of search results.",
+                messageSize: '16px',
+                position: 'center',
+                backgroundColor: '#b48dc9'
+            });
+        } else {
+            loadMore.classList.remove('hidden');
         }
-    })
-    .catch(error => {
-        showLoader()
+
+        smoothScroll();
+        showScrollToTop();
+    }  catch (error) {
+        console.error(error);
         iziToast.error({
             title: "Error",
             message: `Please add request`,
             messageSize: '16px',
             position: 'center',
             backgroundColor: '#EF4040',
-        })
-        hideLoader();
-        gallery.innerHTML = '';
-    })
-    .finally(() => {
-        e.target.reset();
-    });
-})
+        });
+        loader.classList.add('hidden');
 
-function render(hits) {
-    const murkup = createMurkup(hits);
-    gallery.insertAdjacentHTML('beforeend', murkup);
-    lightbox.refresh();
+    };
 }
 
+function smoothScroll() {
+    const gallery = document.querySelector('.gallery');
+    if (gallery) {
+        const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
+        window.scrollBy({
+            top: cardHeight * 2,
+            behavior: 'smooth',
+        });
+    }
+}
 
+function showScrollToTop() {
+    if (window.scrollY > 1000) {
+        scrollBtn.classList.remove('hidden');
+        
+    } else {
+        scrollBtn.classList.add('hidden');
+    }
+}
 
+function scrollToTop() {
+    window.scrollTo({
+        top: 0,
+        behavior: 'auto',
+    });
+}
 
-const showLoader = () => {
-    loader.classList.remove('hidden')
-};
-
-   const hideLoader = () => {
-  loader.classList.add('hidden');
-}; 
+window.addEventListener('scroll', scrollBtn);
+ 
