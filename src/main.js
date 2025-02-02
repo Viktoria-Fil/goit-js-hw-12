@@ -27,6 +27,18 @@ async function submitBtn(e) {
 
     queryC = input.value.trim();
     pageC = 1;
+    if (!queryC) {
+        loader.classList.remove('hidden');
+        loader.classList.add('hidden');
+        iziToast.warning({
+            title: "Caution",
+            message: "Please add request",
+            messageSize: '16px',
+            position: 'center',
+            color: 'black'
+        });
+        return
+    }
      
     await fetchImg();
 
@@ -44,7 +56,7 @@ async function fetchImg() {
     try {
         const data = await getPictures(queryC, pageC);
         loader.classList.add('hidden');
-        if (data.total === 0 || queryC === "") {
+        if (data.total === 0) {
             loadMore.classList.add('hidden');
             scrollBtn.classList.add('hidden');
             iziToast.info({
@@ -77,7 +89,7 @@ async function fetchImg() {
         console.error(error);
         iziToast.error({
             title: "Error",
-            message: `Please add request`,
+            message: `Failed to fatch images. Please try again later`,
             messageSize: '16px',
             position: 'center',
             backgroundColor: '#EF4040',
